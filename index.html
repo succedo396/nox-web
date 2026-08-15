@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nox* — el recibo de tu sábado</title>
+<meta name="description" content="Tu sábado ya tiene recibo. Entrada, cuenta, seguridad y memoria en un solo escaneo. Nox — cdmx & são paulo.">
+<meta name="theme-color" content="#150f09">
+<link rel="canonical" href="https://nox-social.com/">
+<meta property="og:title" content="nox* — el recibo de tu sábado">
+<meta property="og:description" content="Toda la noche, detallada renglón por renglón. La lista nunca pide dinero. La puerta decide.">
+<meta property="og:url" content="https://nox-social.com/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23150f09'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%23f3e9d7' stroke-width='5'/%3E%3Ccircle cx='49' cy='15' r='4' fill='%23d92643'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   NOX WEB · "EL RECIBO" · v2
+   Changes v1 → v2 (San, 14-ago):
+   · después-note punchline → "sobrevive lo que tu jarra no." (cut there)
+   · voltear el recibo → navigates to el-reverso.html (full back side)
+   · museum entrance block at the bottom of the wall
+   ============================================================ */
+:root{
+  --room:#150f09;
+  --paper:#f4ead7;
+  --paper-edge:#e6d9bf;
+  --ink:#251d13;
+  --faint:#8d7f66;
+  --dash:#b4a486;
+  --stamp:#d92643;
+  --amber:#c98a2e;
+  --bone:#f3e9d7;
+  --dim:#a8917a;
+  --etch:#4a443a;
+  --line:#2a2620;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(1100px 520px at 80% -8%, rgba(217,90,60,.07), transparent 60%),
+    radial-gradient(800px 600px at 8% 104%, rgba(201,138,46,.05), transparent 60%),
+    var(--room);
+  color:var(--bone);
+  font-family:'Space Mono',monospace;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.85'/%3E%3C/svg%3E");
+}
+
+header{
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 26px;pointer-events:none;
+  background:linear-gradient(180deg, rgba(21,15,9,.85), transparent);
+}
+.wordmark{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-.01em;pointer-events:auto}
+.wordmark sup{color:var(--stamp);font-size:12px;font-style:italic;font-weight:500}
+nav{display:flex;gap:18px;pointer-events:auto}
+nav a{color:var(--dim);text-decoration:none;font-size:11px;letter-spacing:.18em;text-transform:lowercase;border-bottom:1px dotted transparent;padding-bottom:2px}
+nav a:hover,nav a:focus-visible{color:var(--bone);border-bottom-color:var(--dim);outline:none}
+
+.wall{
+  min-height:92svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:110px 24px 30px;position:relative;z-index:1;
+}
+.wall h1{
+  font-family:'Fraunces',serif;font-weight:560;font-size:clamp(34px,6.4vw,74px);
+  line-height:1.04;letter-spacing:-.015em;max-width:15ch;
+}
+.wall h1 em{font-style:italic;color:var(--amber)}
+.wall .sub{margin-top:22px;color:var(--dim);font-size:13px;letter-spacing:.06em;line-height:1.9;max-width:44ch}
+.wall .hint{margin-top:56px;color:var(--faint);font-size:10px;letter-spacing:.3em;text-transform:uppercase;animation:hintpulse 3.2s ease-in-out infinite}
+@keyframes hintpulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+.slot{position:sticky;top:0;z-index:20;display:flex;justify-content:center;pointer-events:none;height:0}
+.slot .bar{
+  width:min(470px,96vw);height:16px;border-radius:0 0 10px 10px;
+  background:linear-gradient(180deg,#0b0805,#241a10);
+  box-shadow:0 8px 22px rgba(0,0,0,.55), inset 0 -1px 0 rgba(243,233,215,.08);
+  position:relative;
+}
+.slot .bar::after{
+  content:"";position:absolute;left:14px;right:14px;top:6px;height:3px;border-radius:2px;
+  background:#050302;box-shadow:inset 0 1px 2px rgba(0,0,0,.9);
+}
+
+.feed{display:flex;justify-content:center;position:relative;z-index:2}
+.paper{
+  width:min(430px,92vw);
+  background:
+    repeating-linear-gradient(180deg, var(--paper) 0 42px, #efe4cd 42px 43px),
+    var(--paper);
+  color:var(--ink);
+  padding:34px 26px 0;
+  box-shadow:0 30px 80px rgba(0,0,0,.55), 0 2px 0 var(--paper-edge) inset;
+  position:relative;
+}
+.paper::before,.paper::after{content:"";position:absolute;top:0;bottom:0;width:6px;pointer-events:none}
+.paper::before{left:0;background:linear-gradient(90deg,rgba(0,0,0,.14),transparent)}
+.paper::after{right:0;background:linear-gradient(270deg,rgba(0,0,0,.14),transparent)}
+
+.rhead{text-align:center;border-bottom:1px dashed var(--dash);padding-bottom:14px;margin-bottom:14px}
+.rhead b{font-size:14px;letter-spacing:.22em}
+.rhead .meta{font-size:11px;color:var(--faint);margin-top:6px;line-height:1.8}
+
+.rline{
+  display:flex;justify-content:space-between;gap:14px;align-items:baseline;
+  font-size:12.5px;line-height:1.65;padding:7px 0;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.rline.printed{opacity:1;transform:none}
+.rline .t{color:var(--faint);min-width:52px}
+.rline .item{flex:1}
+.rline .item small{display:block;color:var(--faint);font-size:11px;margin-top:2px;line-height:1.6}
+.rline .amt{white-space:nowrap}
+.rline .amt.ok{color:#1c7a4e;font-weight:700}
+.rline .amt.zero{color:var(--stamp);font-weight:700}
+
+.rdiv{border:0;border-top:1px dashed var(--dash);margin:16px 0}
+
+.rnote{
+  font-size:12px;line-height:2;color:var(--ink);
+  padding:12px 4px 16px;opacity:0;transform:translateY(6px);
+  transition:opacity .6s ease .1s, transform .6s ease .1s;
+}
+.rnote.printed{opacity:1;transform:none}
+.rnote .lbl{display:block;font-size:10px;letter-spacing:.26em;color:var(--faint);text-transform:uppercase;margin-bottom:8px}
+.rnote b{font-weight:700}
+
+.stampwrap{position:relative;height:0;z-index:3}
+.stamp{
+  position:absolute;right:6px;top:-14px;
+  transform:rotate(-8deg) scale(.6);opacity:0;
+  border:3px double var(--stamp);color:var(--stamp);
+  font-size:12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  padding:6px 12px;border-radius:4px;
+  mix-blend-mode:multiply;
+  transition:opacity .35s ease, transform .35s cubic-bezier(.2,1.6,.4,1);
+}
+.stamp.printed{opacity:.88;transform:rotate(-8deg) scale(1)}
+.stamp.l{right:auto;left:6px;transform:rotate(6deg) scale(.6)}
+.stamp.l.printed{transform:rotate(6deg) scale(1)}
+
+.rtotal{
+  border-top:1px dashed var(--dash);margin-top:16px;padding:16px 2px 8px;
+  font-size:13.5px;font-weight:700;line-height:2;
+  opacity:0;transition:opacity .8s ease;
+}
+.rtotal.printed{opacity:1}
+.rtotal .big{font-size:15px}
+
+.barcode{
+  margin:20px auto 8px;height:44px;width:78%;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 5px,var(--ink) 5px 6px,transparent 6px 11px,var(--ink) 11px 14px,transparent 14px 17px);
+  opacity:0;transition:opacity .8s ease .2s;
+}
+.barcode.printed{opacity:.9}
+.bclabel{text-align:center;font-size:10px;letter-spacing:.34em;color:var(--faint);padding-bottom:26px;opacity:0;transition:opacity .8s ease .3s}
+.bclabel.printed{opacity:1}
+
+.tear{
+  width:min(430px,92vw);margin:0 auto;position:relative;z-index:2;height:22px;
+  background:
+    linear-gradient(-45deg, transparent 8px, var(--paper) 0) 0 0/22px 22px repeat-x,
+    linear-gradient(45deg, transparent 8px, var(--paper) 0) 11px 0/22px 22px repeat-x;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));
+}
+
+.stub{
+  display:flex;flex-direction:column;align-items:center;gap:22px;
+  padding:110px 24px 60px;text-align:center;position:relative;z-index:1;
+}
+.stub h2{font-family:'Fraunces',serif;font-weight:560;font-size:clamp(26px,4.4vw,44px);letter-spacing:-.01em;max-width:20ch;line-height:1.15}
+.stub h2 em{font-style:italic;color:var(--amber)}
+.qr{width:148px;height:148px;background:var(--paper);padding:12px;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.qr svg{width:100%;height:100%;display:block}
+.stub .cap{font-size:10px;letter-spacing:.3em;color:var(--faint);text-transform:uppercase}
+.stores{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.store{
+  border:1px solid var(--dim);color:var(--bone);text-decoration:none;
+  font-size:11px;letter-spacing:.2em;padding:12px 22px;border-radius:999px;transition:all .4s;
+}
+.store:hover,.store:focus-visible{border-color:var(--amber);color:var(--amber);letter-spacing:.28em;outline:none}
+
+/* ---------- flip → navigates to el-reverso.html ---------- */
+.flipzone{display:flex;justify-content:center;padding:40px 24px 80px;perspective:1400px;position:relative;z-index:1}
+.flipcard{
+  width:min(430px,92vw);transform-style:preserve-3d;
+  transition:transform .8s cubic-bezier(.3,.7,.2,1);
+}
+.flipzone.flipping .flipcard{transform:rotateY(96deg)}
+.face.front{
+  background:var(--paper);color:var(--ink);
+  box-shadow:0 24px 60px rgba(0,0,0,.5);border-radius:4px;
+  text-align:center;font-size:12.5px;line-height:2;padding:30px 26px;
+}
+.face.front .lbl{font-size:10px;letter-spacing:.28em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:12px}
+.flipbtn{
+  margin-top:16px;background:none;border:1px solid var(--ink);color:var(--ink);
+  font-family:inherit;font-size:11px;letter-spacing:.24em;padding:11px 24px;cursor:pointer;
+  transition:all .4s;text-transform:lowercase;text-decoration:none;display:inline-block;
+}
+.flipbtn:hover,.flipbtn:focus-visible{background:var(--ink);color:var(--paper);outline:none}
+
+/* ---------- museum entrance ---------- */
+.museo{display:flex;justify-content:center;padding:0 24px 120px;position:relative;z-index:1}
+.museoplaca{
+  max-width:520px;width:100%;text-decoration:none;display:block;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#141210,#0e0c0a);
+  padding:26px 28px;position:relative;text-align:center;
+  box-shadow:0 1px 0 rgba(216,210,194,.05) inset, 0 20px 50px rgba(0,0,0,.5);
+  transition:border-color .5s;
+}
+.museoplaca:hover,.museoplaca:focus-visible{border-color:var(--etch);outline:none}
+.museoplaca .cat{font-size:9px;letter-spacing:.3em;color:var(--etch);text-transform:uppercase;margin-bottom:12px}
+.museoplaca h3{font-size:13px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--bone);line-height:2}
+.museoplaca p{margin-top:8px;font-size:11px;line-height:2;letter-spacing:.08em;color:var(--dim)}
+.museoplaca .go{
+  display:inline-block;margin-top:16px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px dotted var(--etch);padding-bottom:3px;transition:all .4s;
+}
+.museoplaca:hover .go{color:var(--bone);letter-spacing:.42em}
+
+footer{
+  text-align:center;padding:10px 24px 60px;color:var(--faint);
+  font-size:10px;letter-spacing:.22em;line-height:2.4;position:relative;z-index:1;
+}
+footer .x{color:var(--stamp);font-size:14px;display:block;margin-bottom:8px}
+
+@media (max-width:520px){ nav a:nth-child(2){display:none} }
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+  .rline,.rnote,.stamp,.rtotal,.barcode,.bclabel{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">nox<sup>*</sup></div>
+  <nav>
+    <a href="el-reverso.html">para venues</a>
+    <a href="el-museo.html">el museo</a>
+    <a href="#descargar">descargar</a>
+  </nav>
+</header>
+
+<section class="wall">
+  <h1>Tu sábado ya tiene recibo.<br><em>Nunca lo habías visto.</em></h1>
+  <p class="sub">Entrada, cuenta, tus cosas, los tuyos y la mañana siguiente — toda la noche, detallada renglón por renglón. Nox la imprime completa.</p>
+  <div class="hint">baja para imprimir ↓</div>
+</section>
+
+<div class="slot"><div class="bar" aria-hidden="true"></div></div>
+
+<div class="feed">
+  <article class="paper" aria-label="recibo de la noche">
+    <div class="rhead">
+      <b>NOX × TU SÁBADO</b>
+      <div class="meta">cdmx · tab #0001 · una noche cualquiera<br>— — — se imprime mientras bajas — — —</div>
+    </div>
+
+    <div class="rline"><span class="t">22:41</span><span class="item">fila<small>te la saltaste. el cover se pagó desde el sillón.</small></span><span class="amt zero">$0 min</span></div>
+    <div class="stampwrap"><span class="stamp">sin fila</span></div>
+    <div class="rnote">
+      <span class="lbl">antes · el acceso</span>
+      Un solo QR en la puerta: tu cover pagado, tus contactos de emergencia y el folio de tus cosas, en una sola lectura. <b>Los minutos de la cuerda vuelven a ser tuyos.</b>
+    </div>
+
+    <div class="rline"><span class="t">22:58</span><span class="item">puerta exclusiva<small>pediste acceso desde tu casa. la puerta dijo sí antes de que te vistieras. si dice no, el dinero nunca se movió.</small></span><span class="amt ok">✓</span></div>
+    <div class="stampwrap"><span class="stamp l">la puerta decide</span></div>
+
+    <hr class="rdiv">
+
+    <div class="rline"><span class="t">00:15</span><span class="item">gin tonic ×2<small>pedidos desde tu celular. la tarjeta nunca desapareció detrás de la barra.</small></span><span class="amt">$360</span></div>
+    <div class="rline"><span class="t">00:15</span><span class="item">cargo duplicado<small>botón «no pedí esto», con evidencia. resuelto en el momento, no a gritos a las 4 a.m.</small></span><span class="amt ok">–$360</span></div>
+    <div class="stampwrap"><span class="stamp">anulado</span></div>
+    <div class="rnote">
+      <span class="lbl">durante · el dinero</span>
+      Cada cargo aparece en tu pantalla cuando sucede, con hora y detalle. <b>La cuenta deja de ser un acto de fe.</b>
+    </div>
+
+    <div class="rline"><span class="t">01:03</span><span class="item">«¿dónde estás?»<small>los tuyos, visibles solo si tú también lo estás. recíproco o nada.</small></span><span class="amt ok">✓</span></div>
+    <div class="rline"><span class="t">01:36</span><span class="item">encendedor · folio F-0421<small>lo que se queda en la puerta tiene código. y regresa.</small></span><span class="amt ok">✓</span></div>
+    <div class="rnote">
+      <span class="lbl">durante · el cuidado</span>
+      Contactos de emergencia dentro del QR. Problemas reportados al venue desde tu mano, en el momento. <b>No es una función: es por lo que tu mamá duerme.</b>
+    </div>
+
+    <hr class="rdiv">
+
+    <div class="rline"><span class="t">03:55</span><span class="item">cierre de cuenta<small>sin discusión, sin calculadora, sin «yo pagué la anterior».</small></span><span class="amt ok">✓</span></div>
+    <div class="rline"><span class="t">11:20</span><span class="item">tus amigos te pagan su parte<small>abriste la cuenta de anoche, marcaste quién estuvo, listo. sin cobrarle a nadie.</small></span><span class="amt ok">+$1,180</span></div>
+    <div class="stampwrap"><span class="stamp l">dividido</span></div>
+    <div class="rline"><span class="t">11:24</span><span class="item">las fotos de anoche<small>en un feed que solo abre quien estuvo en ese cuarto, esa noche. cero extraños, cero bots.</small></span><span class="amt ok">✓</span></div>
+    <div class="rline"><span class="t">11:31</span><span class="item">tu sello<small>llegas, pagas, cero incidentes. tu reputación viaja contigo a otras puertas y otras ciudades.</small></span><span class="amt ok">✓</span></div>
+    <div class="rnote">
+      <span class="lbl">después · la memoria</span>
+      <b>El recibo de la mañana siguiente sobrevive lo que tu jarra no.</b>
+    </div>
+
+    <div class="rtotal">
+      <div style="display:flex;justify-content:space-between"><span>TOTAL:</span><span class="big">la misma noche,</span></div>
+      <div style="text-align:right" class="big">sin la peor parte.</div>
+    </div>
+
+    <div class="barcode" aria-hidden="true"></div>
+    <div class="bclabel">n o x · la noche entera</div>
+  </article>
+</div>
+<div class="tear" aria-hidden="true"></div>
+
+<section class="stub" id="descargar">
+  <h2>¿Factura? <em>Escanea.</em></h2>
+  <div class="qr" aria-label="código para descargar nox">
+    <svg viewBox="0 0 29 29" id="qrsvg" role="img"></svg>
+  </div>
+  <div class="cap">descarga nox · cdmx & são paulo</div>
+  <div class="stores">
+    <a class="store" href="#">app store</a>
+    <a class="store" href="#">google play</a>
+  </div>
+</section>
+
+<div class="flipzone" id="venues">
+  <div class="flipcard">
+    <div class="face front">
+      <span class="lbl">¿tienes un venue?</span>
+      Este recibo tiene otro lado.<br>El tuyo.
+      <br>
+      <a class="flipbtn" href="el-reverso.html" onclick="return flipNav(event)">voltear el recibo →</a>
+    </div>
+  </div>
+</div>
+
+<div class="museo">
+  <a class="museoplaca" href="el-museo.html">
+    <div class="cat">antes de irte · exposición temporal-permanente</div>
+    <h3>Museo de la Misma Noche</h3>
+    <p>Colección 2019–2026: la mesa de siempre, el chat muerto y la historia de Cancún (vez #41). Entrada libre. La salida es lo nuestro.</p>
+    <span class="go">visitar el museo →</span>
+  </a>
+</div>
+
+<footer>
+  <span class="x">✕</span>
+  nox · cdmx · são paulo<br>
+  la lista nunca pide dinero. la puerta decide.
+</footer>
+
+<script>
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('printed'); io.unobserve(e.target);} });
+},{threshold:.35, rootMargin:"0px 0px -8% 0px"});
+document.querySelectorAll('.rline,.rnote,.stamp,.rtotal,.barcode,.bclabel').forEach(el=>io.observe(el));
+
+/* flip animation, then navigate to the back side */
+function flipNav(e){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+  e.preventDefault();
+  const z=document.getElementById('venues');
+  z.classList.add('flipping');
+  setTimeout(()=>{ location.href='el-reverso.html'; }, 620);
+  return false;
+}
+
+/* deterministic decorative QR (visual placeholder) */
+(function(){
+  const svg=document.getElementById('qrsvg');
+  const N=29; let seed=20260814;
+  const rnd=()=>{seed=(seed*1103515245+12345)%2147483648; return seed/2147483648;};
+  let cells='';
+  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#f4ead7"/><rect x="${x+2}" y="${y+2}" width="3" height="3"/>`;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9);
+    if(!inF && rnd()<.44) cells+=`<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  }
+  svg.innerHTML=`<g fill="#251d13">${cells}${finder(0,0)}${finder(N-7,0)}${finder(0,N-7)}</g>`;
+})();
+</script>
+</body>
+</html>

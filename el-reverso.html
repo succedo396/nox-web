@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nox* — el reverso del recibo · para venues</title>
+<meta name="description" content="El mismo recibo, tu lado del papel. Puerta rápida, dinero el mismo día, CFDI automático. Nox para venues — pilotos en cdmx y são paulo.">
+<meta name="theme-color" content="#150f09">
+<link rel="canonical" href="https://nox-social.com/el-reverso.html">
+<meta property="og:title" content="nox* — el reverso · para venues">
+<meta property="og:description" content="Tu noche, más tranquila. Tu dinero, más temprano. Tu puerta, tuya.">
+<meta property="og:url" content="https://nox-social.com/el-reverso.html">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23150f09'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%23f3e9d7' stroke-width='5'/%3E%3Ccircle cx='49' cy='15' r='4' fill='%23d92643'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   NOX WEB · "EL REVERSO" — the back of the receipt, full page.
+   The operator's night, itemized. Back-of-thermal-paper: greyer
+   cream, ruled ghost lines, and the front's ink showing through
+   in mirror — you are literally reading the other side.
+   ============================================================ */
+:root{
+  --room:#150f09;
+  --paperback:#e9dcc2;         /* back of the paper — one tone duller */
+  --rule:rgba(37,29,19,.055);
+  --ink:#2b2317;
+  --faint:#8a7c60;
+  --dash:#b3a381;
+  --stamp:#d92643;
+  --amber:#c98a2e;
+  --bone:#f3e9d7;
+  --dim:#a8917a;
+  --etch:#4a443a;
+  --line:#2a2620;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(1100px 520px at 20% -8%, rgba(217,90,60,.07), transparent 60%),
+    radial-gradient(800px 600px at 92% 104%, rgba(201,138,46,.05), transparent 60%),
+    var(--room);
+  color:var(--bone);
+  font-family:'Space Mono',monospace;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.85'/%3E%3C/svg%3E");
+}
+
+header{
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 26px;
+  background:linear-gradient(180deg, rgba(21,15,9,.85), transparent);
+}
+.wordmark{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-.01em}
+.wordmark sup{color:var(--stamp);font-size:12px;font-style:italic;font-weight:500}
+nav{display:flex;gap:18px}
+nav a{color:var(--dim);text-decoration:none;font-size:11px;letter-spacing:.18em;text-transform:lowercase;border-bottom:1px dotted transparent;padding-bottom:2px}
+nav a:hover,nav a:focus-visible{color:var(--bone);border-bottom-color:var(--dim);outline:none}
+
+.wall{
+  min-height:82svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:120px 24px 30px;position:relative;z-index:1;
+}
+.wall .lbl{font-size:10px;letter-spacing:.4em;color:var(--faint);text-transform:uppercase;margin-bottom:26px}
+.wall h1{
+  font-family:'Fraunces',serif;font-weight:560;font-size:clamp(32px,6vw,68px);
+  line-height:1.06;letter-spacing:-.015em;max-width:17ch;
+}
+.wall h1 em{font-style:italic;color:var(--amber)}
+.wall .sub{margin-top:22px;color:var(--dim);font-size:13px;letter-spacing:.06em;line-height:1.9;max-width:46ch}
+.wall .hint{margin-top:52px;color:var(--faint);font-size:10px;letter-spacing:.3em;text-transform:uppercase;animation:hintpulse 3.2s ease-in-out infinite}
+@keyframes hintpulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+.slot{position:sticky;top:0;z-index:20;display:flex;justify-content:center;pointer-events:none;height:0}
+.slot .bar{
+  width:min(470px,96vw);height:16px;border-radius:0 0 10px 10px;
+  background:linear-gradient(180deg,#0b0805,#241a10);
+  box-shadow:0 8px 22px rgba(0,0,0,.55), inset 0 -1px 0 rgba(243,233,215,.08);
+  position:relative;
+}
+.slot .bar::after{
+  content:"";position:absolute;left:14px;right:14px;top:6px;height:3px;border-radius:2px;
+  background:#050302;box-shadow:inset 0 1px 2px rgba(0,0,0,.9);
+}
+
+.feed{display:flex;justify-content:center;position:relative;z-index:2}
+.paper{
+  width:min(430px,92vw);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 26px, var(--rule) 26px 27px),
+    var(--paperback);
+  color:var(--ink);
+  padding:34px 26px 0;
+  box-shadow:0 30px 80px rgba(0,0,0,.55);
+  position:relative;overflow:hidden;
+}
+.paper::before,.paper::after{content:"";position:absolute;top:0;bottom:0;width:6px;pointer-events:none;z-index:2}
+.paper::before{left:0;background:linear-gradient(90deg,rgba(0,0,0,.16),transparent)}
+.paper::after{right:0;background:linear-gradient(270deg,rgba(0,0,0,.16),transparent)}
+/* the front's ink, showing through in mirror */
+.ghost{
+  position:absolute;top:30px;left:0;right:0;text-align:center;
+  transform:scaleX(-1);opacity:.06;pointer-events:none;user-select:none;
+  font-size:14px;letter-spacing:.22em;font-weight:700;color:var(--ink);
+  line-height:2.2;
+}
+
+.rhead{text-align:center;border-bottom:1px dashed var(--dash);padding-bottom:14px;margin-bottom:14px;position:relative}
+.rhead b{font-size:14px;letter-spacing:.22em}
+.rhead .meta{font-size:11px;color:var(--faint);margin-top:6px;line-height:1.8}
+
+.rline{
+  display:flex;justify-content:space-between;gap:14px;align-items:baseline;
+  font-size:12.5px;line-height:1.65;padding:7px 0;position:relative;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.rline.printed{opacity:1;transform:none}
+.rline .t{color:var(--faint);min-width:52px}
+.rline .item{flex:1}
+.rline .item small{display:block;color:var(--faint);font-size:11px;margin-top:2px;line-height:1.6}
+.rline .amt{white-space:nowrap}
+.rline .amt.ok{color:#1c7a4e;font-weight:700}
+.rline .amt.zero{color:var(--stamp);font-weight:700}
+
+.rdiv{border:0;border-top:1px dashed var(--dash);margin:16px 0}
+
+.rnote{
+  font-size:12px;line-height:2;color:var(--ink);
+  padding:12px 4px 16px;position:relative;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .6s ease .1s, transform .6s ease .1s;
+}
+.rnote.printed{opacity:1;transform:none}
+.rnote .lbl{display:block;font-size:10px;letter-spacing:.26em;color:var(--faint);text-transform:uppercase;margin-bottom:8px}
+.rnote b{font-weight:700}
+
+.stampwrap{position:relative;height:0;z-index:3}
+.stamp{
+  position:absolute;right:6px;top:-14px;
+  transform:rotate(-8deg) scale(.6);opacity:0;
+  border:3px double var(--stamp);color:var(--stamp);
+  font-size:12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  padding:6px 12px;border-radius:4px;mix-blend-mode:multiply;
+  transition:opacity .35s ease, transform .35s cubic-bezier(.2,1.6,.4,1);
+}
+.stamp.printed{opacity:.88;transform:rotate(-8deg) scale(1)}
+.stamp.l{right:auto;left:6px;transform:rotate(6deg) scale(.6)}
+.stamp.l.printed{transform:rotate(6deg) scale(1)}
+
+.rtotal{
+  border-top:1px dashed var(--dash);margin-top:16px;padding:16px 2px 24px;
+  font-size:13px;font-weight:700;line-height:2.1;position:relative;
+  opacity:0;transition:opacity .8s ease;
+}
+.rtotal.printed{opacity:1}
+
+.tear{
+  width:min(430px,92vw);margin:0 auto;position:relative;z-index:2;height:22px;
+  background:
+    linear-gradient(-45deg, transparent 8px, var(--paperback) 0) 0 0/22px 22px repeat-x,
+    linear-gradient(45deg, transparent 8px, var(--paperback) 0) 11px 0/22px 22px repeat-x;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));
+}
+
+.stub{
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+  padding:110px 24px 70px;text-align:center;position:relative;z-index:1;
+}
+.stub h2{font-family:'Fraunces',serif;font-weight:560;font-size:clamp(26px,4.4vw,44px);letter-spacing:-.01em;max-width:22ch;line-height:1.15}
+.stub h2 em{font-style:italic;color:var(--amber)}
+.stub .sub{color:var(--dim);font-size:12px;letter-spacing:.06em;line-height:2;max-width:48ch}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.cta{
+  border:1px solid var(--amber);color:var(--amber);text-decoration:none;
+  font-size:11px;letter-spacing:.24em;padding:14px 30px;border-radius:999px;transition:all .4s;
+  text-transform:lowercase;
+}
+.cta:hover,.cta:focus-visible{background:var(--amber);color:#251402;letter-spacing:.3em;outline:none}
+.cta.ghost{border-color:var(--dim);color:var(--dim)}
+.cta.ghost:hover,.cta.ghost:focus-visible{background:transparent;border-color:var(--bone);color:var(--bone)}
+
+.museo{display:flex;justify-content:center;padding:20px 24px 120px;position:relative;z-index:1}
+.museoplaca{
+  max-width:520px;width:100%;text-decoration:none;display:block;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#141210,#0e0c0a);
+  padding:26px 28px;text-align:center;
+  box-shadow:0 1px 0 rgba(216,210,194,.05) inset, 0 20px 50px rgba(0,0,0,.5);
+  transition:border-color .5s;
+}
+.museoplaca:hover,.museoplaca:focus-visible{border-color:var(--etch);outline:none}
+.museoplaca .cat{font-size:9px;letter-spacing:.3em;color:var(--etch);text-transform:uppercase;margin-bottom:12px}
+.museoplaca h3{font-size:13px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--bone);line-height:2}
+.museoplaca p{margin-top:8px;font-size:11px;line-height:2;letter-spacing:.08em;color:var(--dim)}
+.museoplaca .go{
+  display:inline-block;margin-top:16px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px dotted var(--etch);padding-bottom:3px;transition:all .4s;
+}
+.museoplaca:hover .go{color:var(--bone);letter-spacing:.42em}
+
+footer{
+  text-align:center;padding:10px 24px 60px;color:var(--faint);
+  font-size:10px;letter-spacing:.22em;line-height:2.4;position:relative;z-index:1;
+}
+footer .x{color:var(--stamp);font-size:14px;display:block;margin-bottom:8px}
+
+@media (max-width:560px){ nav a:nth-child(3){display:none} }
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+  .rline,.rnote,.stamp,.rtotal{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">nox<sup>*</sup></div>
+  <nav>
+    <a href="index.html">← voltear al frente</a>
+    <a href="el-museo.html">el museo</a>
+    <a href="#contacto">hablar con nox</a>
+  </nav>
+</header>
+
+<section class="wall">
+  <div class="lbl">el reverso · para operadores</div>
+  <h1>El mismo recibo.<br><em>Tu lado del papel.</em></h1>
+  <p class="sub">Una noche de servicio, detallada desde tu puerta hasta tu banco. Todo lo que el frente le promete al invitado, el reverso te lo cobra a favor.</p>
+  <div class="hint">baja para imprimir ↓</div>
+</section>
+
+<div class="slot"><div class="bar" aria-hidden="true"></div></div>
+
+<div class="feed">
+  <article class="paper" aria-label="recibo de la noche, lado del venue">
+    <div class="ghost" aria-hidden="true">NOX × TU SÁBADO<br>— el frente se transparenta —</div>
+    <div class="rhead">
+      <b>NOX × TU VENUE</b>
+      <div class="meta">una noche de servicio · corte #0001<br>— — — el otro lado de la misma noche — — —</div>
+    </div>
+
+    <div class="rline"><span class="t">21:30</span><span class="item">abre la puerta<small>la lista es un sistema, no un clipboard. cada nombre con historial.</small></span><span class="amt ok">✓</span></div>
+    <div class="rline"><span class="t">22:41</span><span class="item">un escaneo por invitado<small>entrada pagada + folio abierto + registro hecho. la fila avanza; las broncas en la cuerda bajan.</small></span><span class="amt zero">3 seg</span></div>
+    <div class="stampwrap"><span class="stamp">puerta rápida</span></div>
+    <div class="rnote">
+      <span class="lbl">la puerta · operación</span>
+      Cada entrada queda ligada a una identidad escaneada. <b>Tu lista deja de ser papel y se vuelve memoria.</b>
+    </div>
+
+    <div class="rline"><span class="t">23:10</span><span class="item">solicitudes de acceso: 14<small>cada una llega con su sello primero y su cover pre-autorizado después. tú decides; cada sí ya está pagado; cada no, sin drama y sin dinero movido.</small></span><span class="amt ok">✓</span></div>
+    <div class="stampwrap"><span class="stamp l">la puerta es tuya</span></div>
+    <div class="rnote">
+      <span class="lbl">la puerta · criterio</span>
+      Tu juicio no se toca — solo sucede antes, con mejor información. <b>Nox no es una manguera de gente apuntada a tu cuerda: es una mesa de admisión que paga.</b>
+    </div>
+
+    <hr class="rdiv">
+
+    <div class="rline"><span class="t">00:15</span><span class="item">pedidos desde el celular<small>tus botellas y mesas frente al invitado con más ganas de pedirlas, a la hora exacta. el upsell deja de depender de una mirada en la oscuridad.</small></span><span class="amt">+18% ticket</span></div>
+    <div class="rline"><span class="t">01:18</span><span class="item">disputa #1<small>su reclamo y tu evidencia son el mismo documento. muere joven, en el dashboard, no a gritos en el cierre.</small></span><span class="amt ok">resuelta</span></div>
+    <div class="stampwrap"><span class="stamp">evidencia adjunta</span></div>
+    <div class="rline"><span class="t">01:36</span><span class="item">folio F-0421 · encendedor<small>lo confiscado y lo encargado, con código y bitácora. el inbox del domingo se encoge.</small></span><span class="amt ok">✓</span></div>
+    <div class="rnote">
+      <span class="lbl">el piso · staff</span>
+      Los pedidos llegan solos, las cuentas se cierran solas, las propinas se enrutan digitales. <b>Tu barra sirve más y cuadra menos.</b>
+    </div>
+
+    <hr class="rdiv">
+
+    <div class="rline"><span class="t">03:55</span><span class="item">corte de la noche<small>cada cuenta, itemizada y firmada por un escaneo.</small></span><span class="amt ok">✓</span></div>
+    <div class="rline"><span class="t">04:30</span><span class="item">depósito del día<small>el dinero de la noche, en tu cuenta el mismo día — mientras el hielo todavía se derrite.</small></span><span class="amt ok">mismo día</span></div>
+    <div class="stampwrap"><span class="stamp l">mismo día</span></div>
+    <div class="rline"><span class="t">lun 09:00</span><span class="item">el papeleo se archivó solo<small>cada cuenta puede volverse CFDI automáticamente. tu peor hora de la semana, ahora un proceso de fondo.</small></span><span class="amt ok">CFDI ✓</span></div>
+    <div class="rnote">
+      <span class="lbl">la semana · inteligencia</span>
+      Cuánto mezcal necesita el jueves, a qué hora gana su turno el segundo bartender. <b>Compras patrones, nunca personas</b> — esa es la posición legal y el mejor producto.
+    </div>
+
+    <div class="rtotal">
+      <div style="display:flex;justify-content:space-between;gap:14px"><span>TOTAL:</span><span style="text-align:right">tu noche, más tranquila.<br>tu dinero, más temprano.<br>tu puerta, tuya.</span></div>
+    </div>
+  </article>
+</div>
+<div class="tear" aria-hidden="true"></div>
+
+<section class="stub" id="contacto">
+  <h2>El frente convence al invitado.<br><em>El reverso te conviene a ti.</em></h2>
+  <p class="sub">Pilotos en cdmx y são paulo. Sin exclusividad forzada, sin hardware raro: tu POS, nuestra capa.</p>
+  <div class="ctas">
+    <a class="cta" href="#">hablar con nox</a>
+    <a class="cta ghost" href="index.html">← voltear al frente</a>
+  </div>
+</section>
+
+<div class="museo">
+  <a class="museoplaca" href="el-museo.html">
+    <div class="cat">antes de irte · exposición temporal-permanente</div>
+    <h3>Museo de la Misma Noche</h3>
+    <p>Lo que pasa en las mesas cuando la noche se vuelve rutina. Sus protagonistas podrían ser tus clientes de todos los sábados. Entrada libre.</p>
+    <span class="go">visitar el museo →</span>
+  </a>
+</div>
+
+<footer>
+  <span class="x">✕</span>
+  nox · cdmx · são paulo<br>
+  la lista nunca pide dinero. la puerta decide.
+</footer>
+
+<script>
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('printed'); io.unobserve(e.target);} });
+},{threshold:.35, rootMargin:"0px 0px -8% 0px"});
+document.querySelectorAll('.rline,.rnote,.stamp,.rtotal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
