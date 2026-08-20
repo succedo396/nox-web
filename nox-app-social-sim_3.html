@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nox* — social spine · simulador de escala</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --ink:#131009; --surface:#1c1710; --surface2:#231b10; --line:#2c2517; --line2:#3a3020;
+  --bone:#f2e8ce; --dim:#9d9271; --dim2:#7d7052; --uv:#6a52e8; --uvsoft:#3a3160; --berm:#d95a3c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0806;min-height:100vh;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--bone);display:flex;flex-direction:column;align-items:center;padding:26px 12px 60px}
+/* ---------- simulator panel ---------- */
+.simbar{width:min(720px,100%);display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.simbar .lbl{font-size:11px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;margin-right:4px}
+.scalebtn{background:none;border:1px solid var(--line2);border-radius:99px;color:var(--dim);padding:9px 18px;font-size:13px;cursor:pointer;transition:.2s}
+.scalebtn.on{background:var(--bone);border-color:var(--bone);color:var(--ink);font-weight:600}
+.replaybtn{background:none;border:1px solid var(--line2);border-radius:99px;color:var(--dim2);padding:9px 14px;font-size:12px;cursor:pointer}
+/* ---------- phone ---------- */
+.phone{position:relative;width:390px;max-width:96vw;height:800px;background:var(--ink);border:1px solid #2a2314;border-radius:44px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+/* ---------- intro (la onda, frozen style) ---------- */
+#intro{position:absolute;inset:0;background:var(--ink);z-index:60;cursor:pointer}
+#intro .ltr{position:absolute;top:calc(50% - 27px);font-weight:600;font-size:54px;color:var(--bone);opacity:0}
+#hub{position:absolute;left:50%;top:50%;width:0;height:0}
+#o0{position:absolute;left:-19px;top:-19px;width:38px;height:38px;border:7px solid var(--bone);border-radius:50%;opacity:0}
+.mc{position:absolute;border-radius:50%;opacity:0;border-style:solid;border-color:var(--bone)}
+#shock{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border:3px solid var(--bone);border-radius:50%;opacity:0}
+#flash{position:absolute;inset:0;background:var(--uv);opacity:0}
+.pt{position:absolute;left:50%;top:50%;opacity:0;border-radius:3px}
+@media (prefers-reduced-motion:no-preference){
+ .run #intro .ltr{animation:fin .45s ease .15s forwards,fout .6s ease .9s forwards}
+ .run #hub{animation:zoom .9s cubic-bezier(.55,0,.35,1) .9s forwards}
+ .run #o0{animation:fin .45s ease .15s forwards,trem .32s ease 1.55s,fdie .3s linear 1.95s forwards}
+ .run .mc{animation:mul .6s cubic-bezier(.2,.7,.3,1) forwards,pop .38s ease forwards;animation-delay:calc(1.8s + var(--d)),calc(2.95s + var(--d)*.4)}
+ .run #shock{animation:shk .75s cubic-bezier(.2,.7,.3,1) 2.9s forwards}
+ .run #flash{animation:flsh .8s ease 2.9s forwards}
+ .run .pt{animation:fly .95s cubic-bezier(.15,.6,.3,1) 2.9s forwards}
+ .run #intro{animation:introgone .4s ease 3.55s forwards}
+}
+@keyframes fin{to{opacity:1}}
+@keyframes fout{to{opacity:0;transform:translateX(var(--dx)) scale(1.5)}}
+@keyframes zoom{to{transform:scale(2.3)}}
+@keyframes trem{0%,100%{transform:translate(0,0)}25%{transform:translate(-1.5px,1px)}50%{transform:translate(1.5px,-1px)}75%{transform:translate(-1px,-1.2px)}}
+@keyframes fdie{to{opacity:0}}
+@keyframes mul{from{opacity:0;transform:translate(0,0) scale(.15)}25%{opacity:1}to{opacity:1;transform:translate(var(--x),var(--y)) scale(1)}}
+@keyframes pop{from{opacity:1;transform:translate(var(--x),var(--y)) scale(1)}to{opacity:0;transform:translate(var(--x),var(--y)) scale(1.35)}}
+@keyframes shk{from{opacity:.9;transform:scale(.3)}to{opacity:0;transform:scale(9)}}
+@keyframes flsh{15%{opacity:.28}100%{opacity:0}}
+@keyframes fly{from{opacity:1;transform:translate(0,0) rotate(0)}to{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--r))}}
+@keyframes introgone{to{opacity:0;visibility:hidden}}
+/* ---------- app shell ---------- */
+.app{position:absolute;inset:0;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 10px}
+.wordmark{font-size:19px;font-weight:600;letter-spacing:5px}
+.citytag{font-size:11px;color:var(--dim);letter-spacing:1px;text-align:right;line-height:1.5}
+.citytag b{color:var(--bone);font-weight:600}
+.modes{display:flex;gap:7px;padding:6px 18px 12px}
+.mpill{flex:0 0 auto;padding:7px 17px;border:1px solid var(--line2);border-radius:99px;font-size:12px;letter-spacing:2px;color:var(--dim);cursor:pointer;background:none;transition:.15s}
+.mpill.on{background:var(--uv);border-color:var(--uv);color:var(--bone);font-weight:600}
+.content{flex:1;overflow-y:auto;padding:2px 14px 90px;scrollbar-width:none}
+.content::-webkit-scrollbar{display:none}
+/* ---------- social cards ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:15px 15px 12px;margin-bottom:12px}
+.faces{display:flex;align-items:center;margin-bottom:10px}
+.av{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-left:-9px}
+.av:first-child{margin-left:0}
+.social-line{font-size:12.5px;color:var(--dim);margin-left:10px;line-height:1.35}
+.social-line b{color:var(--bone);font-weight:600}
+.ptitle{font-size:16.5px;font-weight:650;margin-bottom:3px;letter-spacing:.2px}
+.pmeta{font-size:12px;color:var(--dim);margin-bottom:10px}
+.pmeta .casa{color:var(--berm)} .pmeta .venue{color:#8b76ff}
+.chatline{background:var(--surface2);border-radius:11px;padding:8px 11px;font-size:12.5px;color:var(--dim);margin-bottom:10px}
+.chatline b{color:var(--bone);font-weight:600}
+.crow{display:flex;align-items:center;justify-content:space-between}
+.reacts{display:flex;gap:14px;font-size:12px;color:var(--dim2)}
+.reacts span b{color:var(--dim);font-weight:600}
+.entry{font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);color:var(--dim)}
+.entry.uv{border-color:var(--uvsoft);color:#a795ff}
+.entry.free{color:#b4c47f;border-color:#39381f}
+/* sol recap */
+.tiles{display:flex;gap:6px;margin-bottom:10px}
+.tile{flex:1;height:86px;border-radius:12px;display:flex;align-items:flex-end;padding:8px;font-size:11px;color:rgba(242,232,206,.85);font-weight:600}
+.recapline{font-size:13px;color:var(--dim);line-height:1.5}
+.recapline b{color:var(--bone)}
+/* invite growth card (1k) */
+.grow{border:1px dashed var(--uvsoft);background:none;text-align:center;padding:20px 16px}
+.grow .big{font-size:15px;font-weight:650;margin-bottom:5px}
+.grow .sm{font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.5}
+.grow button{background:var(--uv);border:none;color:var(--bone);font-weight:600;font-size:13px;padding:10px 22px;border-radius:99px;cursor:pointer}
+/* section labels */
+.sect{font-size:11px;letter-spacing:2.5px;color:var(--dim2);text-transform:uppercase;margin:16px 4px 10px}
+/* ---------- explore ---------- */
+.search{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px;font-size:13.5px;color:var(--dim2)}
+.chips{display:flex;gap:8px;margin-bottom:12px}
+.chip{padding:7px 15px;border-radius:99px;border:1px solid var(--line2);font-size:12px;color:var(--dim);cursor:pointer;background:none}
+.chip.on{background:var(--bone);color:var(--ink);border-color:var(--bone);font-weight:650}
+.mapwrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);margin-bottom:12px}
+.maplegend{position:absolute;bottom:10px;left:12px;display:flex;gap:12px;font-size:10.5px;color:var(--dim)}
+.dotk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.exrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.exdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.exname{font-size:13.5px;font-weight:600;flex:1}
+.exmeta{font-size:11px;color:var(--dim2)}
+.mapoff{padding:26px 18px;text-align:center;border:1px dashed var(--line2);border-radius:18px;margin-bottom:12px}
+.mapoff .t{font-size:13.5px;font-weight:600;margin-bottom:5px}
+.mapoff .s{font-size:12px;color:var(--dim);line-height:1.5}
+/* ---------- stories rail ---------- */
+.stories{display:flex;gap:14px;overflow-x:auto;padding:4px 4px 14px;scrollbar-width:none}
+.stories::-webkit-scrollbar{display:none}
+.story{flex:0 0 auto;width:62px;text-align:center;cursor:pointer}
+.sring{width:56px;height:56px;border-radius:50%;padding:3px;margin:0 auto 5px;background:var(--uv)}
+.story.seen .sring{background:var(--line2)}
+.story.live .sring{background:var(--berm)}
+.story.mine .sring{background:none;border:2px dashed var(--line2);padding:1px}
+.sav{width:100%;height:100%;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.sname{font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.story.live .sname{color:var(--berm)}
+/* ---------- la deriva (random stories) ---------- */
+.story.drift .sring{background:none;border:2px solid var(--uv);padding:1px}
+.story.drift .sav{background:var(--ink);color:#a795ff;font-size:17px}
+.story.drift .sname{color:#a795ff}
+#drift{position:absolute;inset:0;background:#0c0a06;z-index:45;display:none;flex-direction:column}
+#drift.open{display:flex}
+.dbar{display:flex;gap:4px;padding:14px 14px 0}
+.dseg{flex:1;height:3px;border-radius:2px;background:var(--line2)}
+.dseg.done{background:var(--bone)}
+.dhead{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.dhead .pav{width:34px;height:34px;font-size:12px}
+.dwho{flex:1}
+.dname{font-size:13.5px;font-weight:650}
+.dctx{font-size:11px;color:var(--dim)}
+.dclose{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:4px 8px}
+.dbody{flex:1;margin:6px 14px;border-radius:20px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;cursor:pointer}
+.dcap{font-size:16px;font-weight:600;line-height:1.45;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.dacts{display:flex;gap:10px;padding:14px 16px 26px}
+.dact{flex:1;background:none;border:1px solid var(--line2);border-radius:99px;color:var(--bone);font-size:13px;padding:11px;cursor:pointer}
+.dact.uv{background:var(--uv);border-color:var(--uv);font-weight:650}
+.dhint{position:absolute;top:50%;right:18px;font-size:10px;color:rgba(242,232,206,.35);letter-spacing:1px}
+/* ---------- gente / perfil / crear ---------- */
+.prow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.pav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.pcol{flex:1;min-width:0}
+.pname{font-size:13.5px;font-weight:600}
+.pmeta2{font-size:11px;color:var(--dim2);margin-top:2px}
+.ptag{font-size:10.5px;padding:5px 10px;border-radius:99px;border:1px solid var(--line2);color:var(--dim);white-space:nowrap}
+.createopt{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer}
+.createopt .t{font-size:15.5px;font-weight:650;margin-bottom:4px}
+.createopt .s{font-size:12.5px;color:var(--dim);line-height:1.5}
+.createopt.party{border-color:#4a2e22}
+.createopt.plan{border-color:var(--uvsoft)}
+.formrow{display:flex;justify-content:space-between;align-items:center;padding:13px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.formrow:last-of-type{border-bottom:none}
+.formrow .k{color:var(--dim)}
+.formrow .v{color:var(--bone);font-weight:600}
+.cta{display:block;width:100%;background:var(--uv);border:none;color:var(--bone);font-weight:650;font-size:14.5px;padding:14px;border-radius:14px;cursor:pointer;margin-top:14px}
+.finep{font-size:11px;color:var(--dim2);text-align:center;margin-top:10px}
+.bigav{width:76px;height:76px;border-radius:50%;background:var(--uv);color:var(--bone);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:6px auto 10px}
+.pfname{text-align:center;font-size:17px;font-weight:650}
+.pfsub{text-align:center;font-size:12px;color:var(--dim);margin:4px 0 14px}
+.statgrid{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center}
+.stat .n{font-size:19px;font-weight:700}
+.stat .l{font-size:10px;color:var(--dim2);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.setrow{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:8px;font-size:13.5px}
+.setrow .sub{font-size:11px;color:var(--dim2);margin-top:2px}
+.tgl{width:34px;height:20px;border-radius:99px;background:var(--line2);position:relative;flex-shrink:0}
+.tgl::after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--dim)}
+/* ---------- login ---------- */
+#login{position:absolute;inset:0;background:var(--ink);z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 28px;text-align:center;transition:opacity .35s}
+#login.gone{opacity:0;pointer-events:none}
+#login .lgmark{font-size:44px;font-weight:600;letter-spacing:8px;color:var(--bone)}
+#login .lgmark span{color:var(--uv)}
+#login .lgtag{font-size:12.5px;color:var(--dim);letter-spacing:2px;margin:10px 0 46px;text-transform:uppercase}
+#login .igbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:280px;background:var(--uv);border:none;color:var(--bone);font-weight:650;font-size:14.5px;padding:15px;border-radius:14px;cursor:pointer}
+#login .igbtn svg{width:19px;height:19px;stroke:var(--bone);fill:none;stroke-width:2}
+#login .igbtn.wait{opacity:.75;pointer-events:none}
+#login .lglegal{font-size:11px;color:var(--dim2);margin-top:22px}
+#login .lgfoot{position:absolute;left:24px;right:24px;bottom:26px;font-size:10px;line-height:1.6;color:var(--dim2);font-family:'Courier New',monospace}
+/* ---------- bottom nav ---------- */
+.nav{position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(19,16,9,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 8px 22px}
+.nitem{flex:1;text-align:center;font-size:10.5px;letter-spacing:1px;color:var(--dim2);cursor:pointer}
+.nitem.on{color:var(--bone)}
+.nitem .ic{display:block;width:22px;height:22px;margin:0 auto 4px;border:2px solid currentColor;border-radius:7px}
+.nitem.rings .ic{border-radius:50%}
+.nitem.plus .ic{border-radius:50%;position:relative}
+.nitem.plus .ic::after{content:'+';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+.note{width:min(720px,100%);margin-top:16px;font-size:11.5px;color:#5f5748;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="simbar">
+  <span class="lbl">simulador</span>
+  <button class="scalebtn on" id="b1k" onclick="setScale('1k')">≈ 800 usuarios · ciudad temprana</button>
+  <button class="scalebtn" id="b1m" onclick="setScale('1m')">≈ 1,000,000 · ciudad madura</button>
+  <button class="replaybtn" onclick="replayIntro()">▶ intro</button>
+</div>
+
+<div class="phone run" id="phone">
+
+  <!-- ======== APP ======== -->
+  <div class="app">
+    <div class="hdr">
+      <div class="wordmark">nox<span style="color:var(--uv)">*</span></div>
+      <div class="citytag">CDMX · viernes<br><b id="cityCount"></b> <span id="cityLabel">esta noche</span></div>
+    </div>
+    <div class="modes">
+      <button class="mpill" data-m="pre" onclick="setMode('pre')">PRE</button>
+      <button class="mpill on" data-m="nox" onclick="setMode('nox')">NOX</button>
+      <button class="mpill" data-m="sol" onclick="setMode('sol')">SOL</button>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="nav">
+      <div class="nitem on" id="nv-feed" onclick="setTab('feed')"><span class="ic" style="border-radius:50%"></span>noche</div>
+      <div class="nitem" id="nv-exp" onclick="setTab('exp')"><span class="ic" style="border-radius:4px"></span>explorar</div>
+      <div class="nitem plus" id="nv-crear" onclick="setTab('crear')"><span class="ic"></span>crear</div>
+      <div class="nitem rings" id="nv-gente" onclick="setTab('gente')"><span class="ic"></span>gente</div>
+      <div class="nitem" id="nv-tu" onclick="setTab('tu')"><span class="ic" style="border-radius:50%;border-width:3px"></span>tú</div>
+    </div>
+  </div>
+
+  <!-- ======== LA DERIVA ======== -->
+  <div id="drift">
+    <div class="dbar" id="dbar"></div>
+    <div class="dhead"><div class="pav" id="dav"></div><div class="dwho"><div class="dname" id="dname"></div><div class="dctx" id="dctx"></div></div><button class="dclose" onclick="closeDrift()">✕</button></div>
+    <div class="dbody" id="dbody" onclick="nextDrift()"><div class="dcap" id="dcap"></div><div class="dhint">toca →</div></div>
+    <div class="dacts"><button class="dact" onclick="nextDrift()">pasar</button><button class="dact uv" onclick="nextDrift()">mandar señal</button></div>
+  </div>
+
+  <!-- ======== LOGIN ======== -->
+  <div id="login">
+    <div class="lgmark">nox<span>*</span></div>
+    <div class="lgtag">la noche, con recibo</div>
+    <button class="igbtn" id="igbtn" onclick="igLogin()">
+      <svg viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/></svg>
+      Continuar con Instagram
+    </button>
+    <div class="lglegal">Simulación — ningún login real sucede.</div>
+    <div class="lgfoot">*la app que quiere que cierres la app. noxotros complementamos tu noche, no tu pantalla.</div>
+  </div>
+
+  <!-- ======== INTRO (la onda) ======== -->
+  <div id="intro" onclick="skipIntro()">
+    <div class="ltr" style="right:calc(50% + 34px);--dx:-52px">n</div>
+    <div class="ltr" style="left:calc(50% + 34px);--dx:52px">x</div>
+    <div id="hub">
+      <div id="o0"></div>
+      <div id="shock"></div>
+    </div>
+    <div id="flash"></div>
+  </div>
+</div>
+
+<div class="note">
+  arriba: cambia la escala de la ciudad para sentir el mismo producto con 800 personas y con un millón.<br>
+  el mapa y los filtros (casas / venues) se encienden en la versión de un millón · toca la intro para saltarla
+</div>
+
+<script>
+/* ---------- build intro circles + particles ---------- */
+const hub=document.getElementById('hub');
+const RINGS=[[0,20,.02,60],[-30,-45,.05,34],[70,-55,.09,48],[-60,55,.08,20],[95,35,.11,22],[-90,10,.1,30,'#d95a3c'],[40,-105,.13,24],[-45,95,.12,26,'#6a52e8'],[50,110,.14,44],[-70,-120,.15,56],[115,-60,.16,18,'#d95a3c'],[-125,-60,.18,24],[135,-20,.19,26],[140,55,.2,18,'#6a52e8'],[-140,-15,.21,18],[20,-140,.22,18],[-100,150,.24,24],[10,165,.25,52],[90,-160,.27,30,'#d95a3c'],[125,-120,.26,40,'#6a52e8'],[-135,80,.26,36],[130,95,.28,30],[-10,-180,.3,26],[100,160,.31,28,'#d95a3c'],[-130,-170,.34,44],[140,150,.35,20],[-70,-215,.38,18],[-40,225,.4,22],[60,-235,.42,36],[55,230,.42,38,'#6a52e8'],[-40,-250,.45,20,'#6a52e8'],[130,-210,.46,22],[-130,215,.47,32],[-120,-240,.5,28],[-15,255,.5,28],[130,225,.52,24]];
+RINGS.forEach(r=>{const d=document.createElement('div');d.className='mc';
+ d.style.cssText=`--x:${r[0]}px;--y:${r[1]}px;--d:${r[2]}s;width:${r[3]}px;height:${r[3]}px;border-width:${Math.max(3,r[3]/8)}px;margin:${-r[3]/2}px;${r[4]?`border-color:${r[4]}`:''}`;
+ hub.appendChild(d);});
+const PARTS=[[110,-18,120,'#f2e8ce',1],[88,-84,200,'#6a52e8',0],[26,-124,90,'#d95a3c',1],[-42,-108,-160,'#f2e8ce',0],[-104,-52,80,'#6a52e8',1],[-126,14,220,'#f2e8ce',0],[-92,82,-120,'#d95a3c',1],[-30,126,170,'#6a52e8',0],[44,118,-90,'#f2e8ce',1],[104,66,140,'#d95a3c',0],[132,-58,60,'#f2e8ce',1],[-8,-142,-200,'#f2e8ce',0],[-138,-24,100,'#f2e8ce',1],[64,-112,-140,'#d95a3c',0],[-72,-116,80,'#6a52e8',1],[-116,60,190,'#f2e8ce',0]];
+PARTS.forEach(p=>{const d=document.createElement('div');d.className='pt';
+ d.style.cssText=`--tx:${p[0]}px;--ty:${p[1]}px;--r:${p[2]}deg;background:${p[3]};`+(p[4]?'width:7px;height:7px;border-radius:50%;margin:-3px':'width:4px;height:12px;margin:-5px');
+ hub.appendChild(d);});
+function skipIntro(){const i=document.getElementById('intro');i.style.transition='opacity .25s';i.style.opacity=0;setTimeout(()=>i.style.visibility='hidden',260);}
+function replayIntro(){const ph=document.getElementById('phone'),i=document.getElementById('intro');
+ i.style.cssText='';ph.classList.remove('run');void ph.offsetWidth;ph.classList.add('run');
+ if(S.logged)document.getElementById('login').classList.add('gone');}
+
+/* ---------- avatar palette ---------- */
+const AVC=[['#6a52e8','#f2e8ce'],['#d95a3c','#f2e8ce'],['#b4a15e','#131009'],['#4a6741','#f2e8ce'],['#8b3a52','#f2e8ce'],['#3b5a72','#f2e8ce']];
+function avs(names){return `<div class="faces">${names.map((n,i)=>{const c=AVC[i%AVC.length];return `<div class="av" style="background:${c[0]};color:${c[1]}">${n}</div>`}).join('')}<div class="social-line" data-sl></div></div>`}
+
+/* ---------- data: the same product at two scales ---------- */
+const DATA={
+'1k':{count:'23',label:'salen esta noche',
+ nox:[
+  {t:'Azotea de Emilia',host:'Emilia R.',kind:'casa',meta:'Roma Nte · 21:30 · casa',faces:['ER','JB','+3'],sl:'<b>Julián</b> y <b>2 amigos tuyos</b> van',chat:'<b>Emilia:</b> traigan suéter, arriba hace frío',re:[['señales',14],['van',9]],entry:['free','entrada libre']},
+  {t:'Viernes en Depto 4',host:'Beto M.',kind:'casa',meta:'Narvarte · 22:00 · casa',faces:['BM','RC'],sl:'<b>Regina</b> va — tú conoces a Beto por <b>la noche del sábado</b>',chat:'<b>Rocío:</b> ¿alguien lleva hielo? 🧊 nadie confirmó',re:[['señales',8],['van',6]],entry:['free','entrada libre']},
+  {t:'Fünk · noche de casa',host:'venue',kind:'venue',meta:'Juárez · 23:00 · venue',faces:['LG','MT','+1'],sl:'<b>Luisa</b> pidió acceso hace 2 h',chat:'<b>Marco:</b> el line-up de hoy está rarísimo, vamos',re:[['señales',21],['van',12]],entry:['uv','cover $150 · pedir acceso']},
+  {grow:true,big:'Tu ciudad apenas despierta.',sm:'Hay 23 personas saliendo esta noche en CDMX — y 3 son gente que ya conoces.<br>Cada invitación tuya enciende una puerta más.',btn:'invitar a mi gente · 3 llaves'}
+ ],
+ pre:[
+  {t:'Plan: mesa en Fünk sáb',host:'plan de Ana',kind:'venue',meta:'sábado · faltan 2 para la mesa · deadline hoy 12 pm',faces:['AL','TR','KP','+1'],sl:'<b>Ana</b> propuso mesa entre 6 · <b>4 ya pagaron</b>',chat:'<b>Tania:</b> yo caigo, ahorita pago mi parte',re:[['señales',6],['comentarios',11]],entry:['uv','tu parte: $980']},
+  {t:'Pre en casa de Emilia',host:'Emilia R.',kind:'casa',meta:'viernes · 21:30 · antes de Fünk',faces:['ER','JB'],sl:'<b>2 amigos</b> confirmaron el pre',chat:'<b>Julián:</b> ¿playlist compartida o pongo la mía?',re:[['señales',9],['comentarios',7]],entry:['free','solo llega']}
+ ],
+ sol:[
+  {sol:true,t:'La noche de anoche',tiles:[['#2a2040','24 fotos'],['#402417','video de Beto'],['#1f2c1a','la cuenta, dividida']],cap:'<b>Anoche viviste tu noche 7.</b> 11 personas · 2 casas · la split quedó saldada a las 10:04. <b>Rocío</b> y <b>4 más</b> reaccionaron a tus fotos.'},
+  {sol:true,t:'Sábado en la ciudad',tiles:[['#3a2a14','8 nuevas fotos'],['#241f3d','recap de Fünk']],cap:'<b>3 de tus personas</b> ya subieron su mañana. El domingo se planea solo: hay <b>2 planes</b> abiertos cerca de ti.'}
+ ]},
+'1m':{count:'12,480',label:'en la ciudad esta noche',
+ nox:[
+  {t:'Cumpleaños de la Chule',host:'María F.',kind:'casa',meta:'Condesa · 21:00 · casa · a 800 m',faces:['MF','DR','PL','+9'],sl:'<b>12 personas que conoces</b> van — tu crew del sábado completo',chat:'<b>Dani:</b> el que llegue antes de las 10 ayuda con las luces',re:[['señales',214],['van',87]],entry:['free','entrada libre']},
+  {t:'Fünk · Rebolledo all night',host:'venue',kind:'venue',meta:'Juárez · 23:00 · venue · quedan 40 accesos',faces:['LG','MT','AV','+23'],sl:'<b>Luisa, Marco</b> y <b>26 más</b> ya tienen acceso',chat:'<b>Andrés:</b> mesa 7 confirmada, sobra lugar para 2',re:[['señales',1839],['van',412]],entry:['uv','cover $220 · pedir acceso']},
+  {t:'Azotea sin nombre #33',host:'Colectivo Vela',kind:'casa',meta:'Doctores · 22:30 · casa · dirección al aceptar',faces:['CV','RN','+31'],sl:'<b>tu sello abre esta puerta</b> — 33 lugares, quedan 6',chat:'<b>host:</b> nada de historias adentro. cámara análoga sí.',re:[['señales',926],['van',33]],entry:['uv','$120 · pedir acceso']},
+  {t:'Noche libre en Departamento K',host:'Karla T.',kind:'casa',meta:'Escandón · 21:30 · casa',faces:['KT','JM','+6'],sl:'<b>Julián</b> va — conociste a Karla <b>en la noche 12</b>',chat:'<b>Karla:</b> potluck de mezcales, traigan el raro de su rancho',re:[['señales',148],['van',41]],entry:['free','entrada libre']},
+  {t:'Yu Yu · sótano',host:'venue',kind:'venue',meta:'Centro · 23:30 · venue',faces:['GH','+14'],sl:'<b>3 de tu crew</b> pidieron acceso hace rato',chat:'<b>Gaby:</b> hoy cierra a las 6, lo dijo el staff',re:[['señales',702],['van',188]],entry:['uv','cover $180']},
+ ],
+ pre:[
+  {t:'Plan: 14 personas → Fünk',host:'plan de Andrés',kind:'venue',meta:'hoy · 2 mesas juntas · deadline 6 pm',faces:['AV','LG','MT','+11'],sl:'<b>11 de 14 pagaron</b> · el excedente se va a la barra',chat:'<b>Majo:</b> pago llegando a la ofi, aparten',re:[['señales',44],['comentarios',63]],entry:['uv','tu parte: $760']},
+  {t:'Pre masivo en la Chule',host:'María F.',kind:'casa',meta:'hoy · 21:00 · antes de todo',faces:['MF','DR','+17'],sl:'<b>19 confirmados</b> · 12 son gente que conoces',chat:'<b>Pau:</b> ¿alguien pasa por la Del Valle? llevo bocina',re:[['señales',88],['comentarios',102]],entry:['free','solo llega']},
+  {t:'Plan abierto: dominguito de salsa',host:'plan de Rocío',kind:'venue',meta:'domingo · Mama Rumba · 8 van',faces:['RC','+7'],sl:'<b>Rocío</b> abrió el plan a amigos de amigos',chat:'<b>Rocío:</b> nivel: cero pena, puro flow',re:[['señales',31],['comentarios',18]],entry:['free','unirse al plan']}
+ ],
+ sol:[
+  {sol:true,t:'La noche de anoche',tiles:[['#2a2040','182 fotos de tu noche'],['#402417','12 videos'],['#1f2c1a','cuentas saldadas']],cap:'<b>Noche 41.</b> 3 puertas · 61 personas, 9 nuevas en tu constelación. <b>Karla</b> te etiquetó en el recap de la azotea — <b>214 señales</b> ya.'},
+  {sol:true,t:'La ciudad amaneció',tiles:[['#3a2a14','recaps cerca de ti'],['#241f3d','lo mejor de Fünk'],['#33202c','la salsa de Rocío']],cap:'<b>2,300 recaps</b> se subieron antes del mediodía. El tuyo está en el top de tu colonia. <b>4 planes</b> de domingo ya se armaron desde recaps de anoche.'}
+ ]}
+};
+
+/* ---------- explore data ---------- */
+const EXP={'1k':[
+  {n:'Azotea de Emilia',k:'casa',m:'Roma Nte · hoy'},
+  {n:'Fünk',k:'venue',m:'Juárez · noche de casa'},
+  {n:'Depto 4',k:'casa',m:'Narvarte · hoy'},
+  {n:'Yu Yu',k:'venue',m:'Centro · cerrado hoy'},
+  {n:'Casa de Karla',k:'casa',m:'Escandón · el sábado'}],
+'1m':[
+  {n:'Cumpleaños de la Chule',k:'casa',m:'Condesa · 87 van'},
+  {n:'Fünk · Rebolledo',k:'venue',m:'Juárez · quedan 40 accesos'},
+  {n:'Azotea sin nombre #33',k:'casa',m:'Doctores · quedan 6'},
+  {n:'Yu Yu · sótano',k:'venue',m:'Centro · 188 van'},
+  {n:'Departamento K',k:'casa',m:'Escandón · 41 van'},
+  {n:'Mama Rumba',k:'venue',m:'Roma · domingo'},
+  {n:'Bodega 44',k:'casa',m:'Obrera · dirección al aceptar'},
+  {n:'Looloo',k:'venue',m:'Juárez · 92 van'}]};
+
+/* map dots for 1M: [x,y,r,kind] on 350x240 */
+const DOTS=[[92,88,6,'venue'],[120,72,4,'casa'],[104,118,5,'casa'],[146,96,7,'venue'],[168,80,4,'casa'],[186,110,5,'casa'],[204,92,6,'venue'],[224,124,4,'casa'],[142,140,5,'casa'],[176,152,6,'venue'],[210,160,4,'casa'],[246,104,5,'casa'],[262,138,6,'venue'],[238,170,4,'casa'],[120,168,4,'casa'],[286,90,4,'casa'],[92,140,4,'casa'],[270,180,5,'venue'],[196,196,4,'casa'],[232,206,4,'casa'],[160,188,4,'casa'],[300,150,4,'casa'],[80,110,3,'casa'],[254,66,4,'casa'],[300,196,4,'venue'],[136,58,3,'casa'],[218,58,4,'casa'],[76,170,4,'casa'],[172,120,3,'casa'],[288,120,3,'casa']];
+
+const DRIFT={'1k':[
+ ['MG','Mariana G.','desconocida · Roma Nte · en la Azotea de Emilia','#8b3a52','#2a2040','la playlist la está armando un señor de 60 años y nadie se atreve a decirle que pare. que no pare.'],
+ ['TO','Toño O.','desconocido · Narvarte · Depto 4','#3b5a72','#402417','tres horas debatiendo si pedimos tacos o pizza. ganaron los tacos. siempre ganan los tacos.'],
+ ['LC','Lucía C.','desconocida · Juárez · en Fünk ahora','#4a6741','#1f2c1a','el de la puerta me reconoció por mi noche 3. la ciudad es chiquita cuando es buena.']],
+'1m':[
+ ['VR','Valeria R.','desconocida · Doctores · Azotea #33','#8b3a52','#2a2040','cámara análoga sí, historias no — así que esta es la única prueba de que existió. estuvo mejor de lo que parece.'],
+ ['CH','Checo H.','desconocido · Centro · Yu Yu sótano','#3b5a72','#33202c','bajé por una hora. llevo cuatro. el sótano tiene otra física del tiempo.'],
+ ['IA','Iris A.','desconocida · Condesa · cumpleaños de la Chule','#4a6741','#402417','no conozco a la Chule. mi roomie sí. ya la quiero como si fuera mía.'],
+ ['FM','Fer M.','desconocido · Obrera · Bodega 44','#b4a15e','#241f3d','la dirección llegó al aceptar y el lugar no existe en el mapa. existe en otro lado mejor.'],
+ ['NB','Nadia B.','desconocida · Roma · saliendo del pre','#6a52e8','#1f2c1a','somos 14 caminando a Fünk cantando una canción que solo 3 se saben. así se hace ciudad.']]};
+let D_i=0;
+function openDrift(){D_i=0;document.getElementById('drift').classList.add('open');paintDrift();}
+function closeDrift(){document.getElementById('drift').classList.remove('open');}
+function nextDrift(){D_i++;const set=DRIFT[S.scale];if(D_i>=set.length){closeDrift();return;}paintDrift();}
+function paintDrift(){const set=DRIFT[S.scale];const d=set[D_i];
+ document.getElementById('dbar').innerHTML=set.map((_,i)=>`<div class="dseg ${i<=D_i?'done':''}"></div>`).join('');
+ const av=document.getElementById('dav');av.textContent=d[0];av.style.background=d[3];av.style.color='#f2e8ce';
+ document.getElementById('dname').textContent=d[1];
+ document.getElementById('dctx').textContent=d[2];
+ const b=document.getElementById('dbody');b.style.background=d[4];
+ document.getElementById('dcap').textContent=d[5];}
+let S={scale:'1k',mode:'nox',tab:'feed',filter:'all',logged:false};
+function igLogin(){
+  const b=document.getElementById('igbtn');
+  b.classList.add('wait');b.innerHTML='conectando con Instagram…';
+  setTimeout(()=>{S.logged=true;document.getElementById('login').classList.add('gone');},1100);
+}
+
+function setScale(s){S.scale=s;document.getElementById('b1k').classList.toggle('on',s==='1k');document.getElementById('b1m').classList.toggle('on',s==='1m');render();}
+function setMode(m){S.mode=m;S.tab='feed';document.querySelectorAll('.mpill').forEach(p=>p.classList.toggle('on',p.dataset.m===m));navSync();render();}
+function setTab(t){S.tab=t;navSync();render();}
+function navSync(){['feed','exp','crear','gente','tu'].forEach(t=>{const el=document.getElementById('nv-'+(t==='feed'?'feed':t==='exp'?'exp':t));if(el)el.classList.toggle('on',S.tab===t);});}
+function setFilter(f){S.filter=f;render();}
+
+function cardHTML(c){
+ if(c.grow)return `<div class="card grow"><div class="big">${c.big}</div><div class="sm">${c.sm}</div><button>${c.btn}</button></div>`;
+ if(c.sol)return `<div class="card"><div class="ptitle" style="margin-bottom:10px">${c.t}</div><div class="tiles">${c.tiles.map(t=>`<div class="tile" style="background:${t[0]}">${t[1]}</div>`).join('')}</div><div class="recapline">${c.cap}</div></div>`;
+ const kindTag=c.kind==='casa'?`<span class="casa">casa</span>`:`<span class="venue">venue</span>`;
+ return `<div class="card">
+   ${avs(c.faces).replace('data-sl',`data-sl`).replace('<div class="social-line" data-sl></div>',`<div class="social-line">${c.sl}</div>`)}
+   <div class="ptitle">${c.t}</div>
+   <div class="pmeta">${c.meta.replace('casa',' ').replace('venue',' ')} · ${kindTag} · por <b style="color:var(--bone)">${c.host}</b></div>
+   <div class="chatline">${c.chat}</div>
+   <div class="crow"><div class="reacts">${c.re.map(r=>`<span><b>${r[1]}</b> ${r[0]}</span>`).join('')}</div><div class="entry ${c.entry[0]}">${c.entry[1]}</div></div>
+ </div>`;
+}
+
+function mapHTML(){
+ const dots=DOTS.filter(d=>S.filter==='all'||d[3]===S.filter);
+ return `<div class="mapwrap"><svg width="100%" viewBox="0 0 350 240" style="display:block;background:#17120b">
+  <path d="M0 70 L350 54" stroke="#241c10" stroke-width="7" fill="none"/>
+  <path d="M0 150 L350 130" stroke="#241c10" stroke-width="5" fill="none"/>
+  <path d="M110 0 L130 240" stroke="#241c10" stroke-width="6" fill="none"/>
+  <path d="M230 0 L216 240" stroke="#241c10" stroke-width="5" fill="none"/>
+  <path d="M40 220 Q170 180 350 210" stroke="#20180d" stroke-width="8" fill="none"/>
+  <text x="70" y="46" font-size="9" fill="#4f4636" letter-spacing="2">JUÁREZ</text>
+  <text x="176" y="140" font-size="9" fill="#4f4636" letter-spacing="2">ROMA</text>
+  <text x="252" y="200" font-size="9" fill="#4f4636" letter-spacing="2">CONDESA</text>
+  ${dots.map(d=>`<circle cx="${d[0]}" cy="${d[1]}" r="${d[2]}" fill="${d[3]==='venue'?'#6a52e8':'#d95a3c'}" opacity="${d[3]==='venue'?'.95':'.85'}"/>`).join('')}
+  ${dots.filter(d=>d[2]>5).map(d=>`<circle cx="${d[0]}" cy="${d[1]}" r="${d[2]+5}" fill="none" stroke="${d[3]==='venue'?'#6a52e8':'#d95a3c'}" opacity=".3"/>`).join('')}
+ </svg>
+ <div class="maplegend"><span><span class="dotk" style="background:#d95a3c"></span>casas (${DOTS.filter(d=>d[3]==='casa').length})</span><span><span class="dotk" style="background:#6a52e8"></span>venues (${DOTS.filter(d=>d[3]==='venue').length})</span></div>
+ </div>`;
+}
+
+function render(){
+ const el=document.getElementById('content');const D=DATA[S.scale];
+ document.getElementById('cityCount').textContent=D.count;
+ document.getElementById('cityLabel').textContent=D.label;
+ if(S.tab==='exp'){
+   let h=`<div class="search">⌕&nbsp; buscar noches, gente, lugares…</div>`;
+   if(S.scale==='1m'){
+     h+=`<div class="chips">
+       <button class="chip ${S.filter==='all'?'on':''}" onclick="setFilter('all')">todas</button>
+       <button class="chip ${S.filter==='casa'?'on':''}" onclick="setFilter('casa')">casas</button>
+       <button class="chip ${S.filter==='venue'?'on':''}" onclick="setFilter('venue')">venues</button>
+     </div>`+mapHTML();
+   } else {
+     h+=`<div class="mapoff"><div class="t">El mapa se enciende con la ciudad.</div><div class="s">Con 800 personas, la noche todavía cabe en una lista.<br>Cuando seamos miles, aquí verás cada puerta encendida.</div></div>`;
+   }
+   const rows=EXP[S.scale].filter(r=>S.scale==='1k'||S.filter==='all'||r.k===S.filter);
+   h+=`<div class="sect">${S.scale==='1m'?'esta noche en el mapa':'las puertas de hoy'}</div>`;
+   h+=rows.map(r=>`<div class="exrow"><span class="exdot" style="background:${r.k==='venue'?'#6a52e8':'#d95a3c'}"></span><span class="exname">${r.n}</span><span class="exmeta">${r.m}</span></div>`).join('');
+   el.innerHTML=h;el.scrollTop=0;return;
+ }
+ if(S.tab==='crear'){
+   el.innerHTML=`<div class="sect">abre una puerta</div>
+   <div class="createopt party"><div class="t">Una fiesta — tú hosteas</div><div class="s">Tu casa, tu azotea, tus reglas. La lista es tuya, la puerta responde por ti. Hostear no cuesta nada, nunca.</div></div>
+   <div class="createopt plan"><div class="t">Un plan — ustedes van</div><div class="s">Coordina a tu gente hacia un venue: mesa, covers, cada quien su parte. Nadie persigue a nadie el domingo.</div></div>
+   <div class="card"><div class="formrow"><span class="k">nombre de la noche</span><span class="v">viernes de azotea</span></div>
+   <div class="formrow"><span class="k">dónde</span><span class="v" style="color:var(--berm)">casa</span></div>
+   <div class="formrow"><span class="k">cuándo</span><span class="v">hoy · 21:30</span></div>
+   <div class="formrow"><span class="k">quién entra</span><span class="v">mi gente + sus invitados</span></div>
+   <button class="cta">abrir la puerta</button><div class="finep">al publicarla eres host — así de simple es la definición</div></div>`;
+   el.scrollTop=0;return;
+ }
+ if(S.tab==='gente'){
+   const P={'1k':{crew:[['ER','Emilia R.','7 noches juntas · anoche','#6a52e8'],['JB','Julián B.','5 noches · tu crew del sábado','#d95a3c'],['RC','Rocío C.','3 noches · te debe una señal','#4a6741']],nuevas:[],sug:[]},
+            '1m':{crew:[['ER','Emilia R.','23 noches juntas','#6a52e8'],['JB','Julián B.','19 noches · siempre llega tarde','#d95a3c'],['AV','Andrés V.','12 noches · el de las mesas','#3b5a72'],['RC','Rocío C.','11 noches · la de la salsa','#4a6741']],
+             nuevas:[['KT','Karla T.','conocida en la noche 12 · Escandón','#8b3a52'],['GH','Gaby H.','anoche · Yu Yu sótano','#b4a15e'],['PL','Pau L.','anoche · el pre de la Chule','#6a52e8']],
+             sug:[['MJ','Majo D.','4 noches compartidas con tu crew','#3b5a72'],['DR','Dani R.','va a 2 de tus próximas noches','#d95a3c']]}}[S.scale];
+   let h=`<div class="sect">tu constelación</div>`+P.crew.map(p=>`<div class="prow"><div class="pav" style="background:${p[3]};color:#f2e8ce">${p[0]}</div><div class="pcol"><div class="pname">${p[1]}</div><div class="pmeta2">${p[2]}</div></div><span class="ptag">crew</span></div>`).join('');
+   if(P.nuevas.length)h+=`<div class="sect">nuevas de anoche</div>`+P.nuevas.map(p=>`<div class="prow"><div class="pav" style="background:${p[3]};color:#f2e8ce">${p[0]}</div><div class="pcol"><div class="pname">${p[1]}</div><div class="pmeta2">${p[2]}</div></div><span class="ptag" style="border-color:var(--uvsoft);color:#a795ff">saludar</span></div>`).join('');
+   if(P.sug.length)h+=`<div class="sect">cerca de tu órbita</div>`+P.sug.map(p=>`<div class="prow"><div class="pav" style="background:${p[3]};color:#f2e8ce">${p[0]}</div><div class="pcol"><div class="pname">${p[1]}</div><div class="pmeta2">${p[2]}</div></div><span class="ptag">amigos de amigos</span></div>`).join('');
+   if(S.scale==='1k')h+=`<div class="card grow" style="margin-top:14px"><div class="big">Te quedan 3 llaves.</div><div class="sm">Cada invitación tuya es una persona más en tu constelación —<br>y una puerta más encendida en la ciudad.</div><button>invitar a alguien</button></div>`;
+   el.innerHTML=h;el.scrollTop=0;return;
+ }
+ if(S.tab==='tu'){
+   const T={'1k':{n:'7',p:'18',d:'5',night:'noche 7'},'1m':{n:'41',p:'214',d:'23',night:'noche 41'}}[S.scale];
+   el.innerHTML=`<div class="bigav">S</div><div class="pfname">San</div><div class="pfsub">${T.night} · CDMX · sello limpio</div>
+   <div class="statgrid"><div class="stat"><div class="n">${T.n}</div><div class="l">noches vividas</div></div><div class="stat"><div class="n">${T.p}</div><div class="l">constelación</div></div><div class="stat"><div class="n">${T.d}</div><div class="l">puertas</div></div></div>
+   <div class="setrow"><div><div>mis noches</div><div class="sub">recaps, fotos, recibos</div></div><span style="color:var(--dim2)">›</span></div>
+   <div class="setrow"><div><div>contactos de emergencia</div><div class="sub">4 alcances · tú controlas cada switch</div></div><span style="color:var(--dim2)">›</span></div>
+   <div class="setrow"><div><div>modo abstemio</div><div class="sub">tu parte del split nunca incluye alcohol</div></div><span class="tgl"></span></div>
+   <div class="setrow"><div><div>mis llaves e invitaciones</div><div class="sub">quién entra por ti</div></div><span style="color:var(--dim2)">›</span></div>
+   <div class="setrow"><div><div>ajustes</div><div class="sub">privacidad, visibilidad, datos</div></div><span style="color:var(--dim2)">›</span></div>`;
+   el.scrollTop=0;return;
+ }
+ const ST={'1k':{nox:[['+','tu noche','mine','#1c1710'],['ER','Emilia','live','#6a52e8'],['JB','Julián','','#d95a3c'],['LG','Luisa','seen','#3b5a72']],
+   pre:[['+','tu plan','mine','#1c1710'],['AL','Ana','','#8b3a52'],['ER','Emilia','','#6a52e8']],
+   sol:[['+','tu recap','mine','#1c1710'],['RC','Rocío','','#4a6741'],['BM','Beto','seen','#b4a15e']]},
+ '1m':{nox:[['+','tu noche','mine','#1c1710'],['MF','la Chule','live','#8b3a52'],['AV','Andrés','live','#3b5a72'],['ER','Emilia','','#6a52e8'],['KT','Karla','','#d95a3c'],['GH','Gaby','','#b4a15e'],['JB','Julián','seen','#d95a3c'],['RC','Rocío','seen','#4a6741'],['PL','Pau','seen','#6a52e8']],
+   pre:[['+','tu plan','mine','#1c1710'],['AV','Andrés','live','#3b5a72'],['MF','la Chule','','#8b3a52'],['RC','Rocío','','#4a6741'],['MJ','Majo','seen','#3b5a72']],
+   sol:[['+','tu recap','mine','#1c1710'],['KT','Karla','live','#d95a3c'],['MF','la Chule','','#8b3a52'],['GH','Gaby','','#b4a15e'],['AV','Andrés','seen','#3b5a72'],['ER','Emilia','seen','#6a52e8']]}}[S.scale][S.mode];
+ const rail=`<div class="stories">${ST.map(t=>`<div class="story ${t[2]}"><div class="sring"><div class="sav" style="background:${t[3]};color:#f2e8ce">${t[0]}</div></div><div class="sname">${t[1]}</div></div>`).join('')}<div class="story drift" onclick="openDrift()"><div class="sring"><div class="sav">⤾</div></div><div class="sname">la deriva</div></div></div>`;
+ const feed=D[S.mode];
+ const head={'pre':'planes formándose','nox':'tu gente esta noche','sol':'la mañana después'}[S.mode];
+ el.innerHTML=rail+`<div class="sect">${head}</div>`+feed.map(cardHTML).join('');
+ el.scrollTop=0;
+}
+render();
+</script>
+</body>
+</html>
